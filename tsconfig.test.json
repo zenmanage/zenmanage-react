@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["vitest/globals", "node", "jsdom"],
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*", "tests/**/*", "vitest.config.ts"]
+}

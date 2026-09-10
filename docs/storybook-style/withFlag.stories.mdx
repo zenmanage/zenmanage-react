@@ -1,0 +1,30 @@
+# withFlag Storybook-Style Examples
+
+These examples document `withFlag` usage in a Storybook-like format.
+
+## Basic HOC Gate
+
+```tsx
+function BetaBanner(): JSX.Element {
+  return <div>Beta Banner</div>;
+}
+
+export const BetaBannerWhenEnabled = withFlag('beta-banner')(BetaBanner);
+```
+
+## Fallback for Disabled State
+
+```tsx
+export const BannerWithFallback = withFlag('beta-banner', {
+  disabledFallback: <div>Classic Banner</div>,
+})(BetaBanner);
+```
+
+## Invert for Hide-By-Flag
+
+```tsx
+export const HiddenDuringMaintenance = withFlag('maintenance-mode', {
+  invert: true,
+  loadingFallback: <div>Loading...</div>,
+})(BetaBanner);
+```

@@ -1,0 +1,31 @@
+# FlagGate Storybook-Style Examples
+
+These examples document `FlagGate` usage in a Storybook-like format.
+
+## Basic Feature Gate
+
+```tsx
+<FlagGate flagKey="new-header" disabledFallback={<OldHeader />}>
+  <NewHeader />
+</FlagGate>
+```
+
+## Loading Fallback
+
+```tsx
+<FlagGate
+  flagKey="new-checkout"
+  loadingFallback={<CheckoutSkeleton />}
+  disabledFallback={<LegacyCheckout />}
+>
+  <CheckoutV2 />
+</FlagGate>
+```
+
+## Inverted Gate
+
+```tsx
+<FlagGate flagKey="legacy-mode" invert>
+  <ModernExperience />
+</FlagGate>
+```

@@ -1,0 +1,23 @@
+{
+  "name": "@zenmanage/react-smoke-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test:smoke": "vitest run"
+  },
+  "dependencies": {
+    "@zenmanage/react": "file:../..",
+    "@zenmanage/sdk": "^3.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.0.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "jsdom": "^24.1.1",
+    "typescript": "^5.6.2",
+    "vitest": "^1.6.0"
+  }
+}
