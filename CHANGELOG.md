@@ -1,8 +1,6 @@
-# Changelog
+# @zenmanage/react
 
-All notable changes to this project are documented in this file.
-
-## [1.0.0] - 2026-10-04
+## 1.0.0
 
 First public release. The API below is the 1.0 surface, and semantic versioning applies from here. The Changed, Removed, and Fixed entries are relative to the internal 0.1.0 snapshot.
 
@@ -36,7 +34,7 @@ First public release. The API below is the 1.0 surface, and semantic versioning 
 
 - Hooks stayed in `isLoading` forever after a failed preload. They now settle on their default with the error set.
 
-## [0.1.0] - 2026-05-07
+## 0.1.0
 
 ### Added
 
