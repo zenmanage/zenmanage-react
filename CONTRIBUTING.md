@@ -52,4 +52,4 @@ npm run changeset
 
 This creates a file under `.changeset/` used by the automated release workflow.
 
-If you write a `CHANGELOG.md` entry by hand instead, title the heading exactly `## X.Y.Z`: no brackets and no date. The release workflow copies the section with that heading into the GitHub Release, and falls back to the whole file when none matches.
+If you write a `CHANGELOG.md` entry by hand instead, title the heading exactly `## X.Y.Z` with the real version in place of the placeholder (for example `## 1.0.0`): no brackets and no date. The release workflow copies the section with that heading into the GitHub Release, and falls back to the whole file when none matches.
