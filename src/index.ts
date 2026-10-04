@@ -1,7 +1,7 @@
 export { FlagsProvider } from './FlagsProvider';
 export { FlagGate, type FlagGateProps } from './FlagGate';
 export { withFlag } from './withFlag';
-export { useFlag, useVariant, useBooleanFlag } from './hooks';
+export { useFlag, useVariant } from './hooks';
 export { useFlagsContext } from './context';
 
 export type {
@@ -10,5 +10,6 @@ export type {
   PrimitiveFlagValue,
   UseFlagResult,
   UseVariantResult,
+  WidenFlagValue,
   WithFlagOptions,
 } from './types';

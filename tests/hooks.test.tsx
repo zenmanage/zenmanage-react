@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import { useBooleanFlag, useFlag, useVariant } from '../src/hooks';
+import { describe, expect, it } from 'vitest';
+import { useFlag, useVariant } from '../src/hooks';
 import { createMockClient, createMockManager, createWrapper } from './test-utils';
 
 describe('useFlag', () => {
@@ -21,9 +21,7 @@ describe('useFlag', () => {
 
   it('falls back to default value when loading fails', async () => {
     const manager = createMockManager();
-    manager.single = vi.fn(async () => {
-      throw new Error('boom');
-    });
+    manager.single.mockRejectedValue(new Error('boom'));
 
     const client = createMockClient(manager);
 
@@ -76,20 +74,5 @@ describe('useVariant', () => {
 
     expect(result.current.variant).toBe('one-page');
     expect(result.current.error).toBeNull();
-  });
-});
-
-describe('useBooleanFlag', () => {
-  it('always resolves to boolean output', async () => {
-    const manager = createMockManager({ 'new-nav': 1 });
-    const client = createMockClient(manager);
-
-    const { result } = renderHook(() => useBooleanFlag('new-nav', false), {
-      wrapper: createWrapper(client),
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    expect(result.current.value).toBe(true);
   });
 });

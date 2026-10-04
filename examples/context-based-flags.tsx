@@ -6,13 +6,13 @@ const userContext = new Context('user', 'Jane Doe', 'user-123', [
   new Attribute('plan', ['pro']),
 ]);
 
-function ContextAwareFeature(): JSX.Element {
+function ContextAwareFeature() {
   const { value: showAdvancedAnalytics } = useFlag('advanced-analytics', false);
 
   return showAdvancedAnalytics ? <p>Advanced analytics enabled</p> : <p>Standard analytics</p>;
 }
 
-export function ContextBasedFlagsExample(): JSX.Element {
+export function ContextBasedFlagsExample() {
   return (
     <FlagsProvider
       environmentToken={process.env.ZENMANAGE_ENVIRONMENT_TOKEN || 'cli_placeholder'}

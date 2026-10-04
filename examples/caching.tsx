@@ -1,11 +1,11 @@
 import { FlagsProvider, useFlag } from '@zenmanage/react';
 
-function CachedFeature(): JSX.Element {
+function CachedFeature() {
   const { value } = useFlag('cached-feature', false);
   return <p>{value ? 'Cached feature enabled' : 'Cached feature disabled'}</p>;
 }
 
-export function CachingExample(): JSX.Element {
+export function CachingExample() {
   return (
     <FlagsProvider
       environmentToken={process.env.ZENMANAGE_ENVIRONMENT_TOKEN || 'cli_placeholder'}

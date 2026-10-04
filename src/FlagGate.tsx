@@ -1,12 +1,12 @@
-import type { JSX, PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactElement, ReactNode } from 'react';
 import { useFlag } from './hooks';
 
 export interface FlagGateProps extends PropsWithChildren {
   flagKey: string;
   defaultValue?: boolean;
   invert?: boolean;
-  loadingFallback?: React.ReactNode;
-  disabledFallback?: React.ReactNode;
+  loadingFallback?: ReactNode;
+  disabledFallback?: ReactNode;
 }
 
 export function FlagGate({
@@ -16,7 +16,7 @@ export function FlagGate({
   loadingFallback = null,
   disabledFallback = null,
   children,
-}: FlagGateProps): JSX.Element | null {
+}: FlagGateProps): ReactElement | null {
   const { value, isLoading } = useFlag<boolean>(flagKey, defaultValue);
 
   if (isLoading) {

@@ -1,8 +1,8 @@
-import type { ComponentType, JSX } from 'react';
+import type { ComponentType, ReactElement, ReactNode } from 'react';
 import { useFlag } from './hooks';
 import type { WithFlagOptions } from './types';
 
-function renderFallback(fallback: React.ReactNode): JSX.Element | null {
+function renderFallback(fallback: ReactNode): ReactElement | null {
   if (fallback === null || fallback === undefined || fallback === false) {
     return null;
   }
@@ -22,8 +22,8 @@ export function withFlag<P extends object>(
   } = options;
 
   return function withFlagDecorator(WrappedComponent: ComponentType<P>): ComponentType<P> {
-    function FlagWrappedComponent(props: P): JSX.Element | null {
-      const { value, isLoading } = useFlag<boolean>(key, Boolean(defaultValue));
+    function FlagWrappedComponent(props: P): ReactElement | null {
+      const { value, isLoading } = useFlag<boolean>(key, defaultValue);
 
       if (isLoading) {
         return renderFallback(loadingFallback);

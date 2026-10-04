@@ -1,6 +1,6 @@
 import { FlagsProvider, useVariant } from '@zenmanage/react';
 
-function CheckoutExperience(): JSX.Element {
+function CheckoutExperience() {
   const { variant, isLoading } = useVariant('checkout-flow', 'control');
 
   if (isLoading) {
@@ -14,7 +14,7 @@ function CheckoutExperience(): JSX.Element {
   return <p>Control multi-step checkout</p>;
 }
 
-export function ABTestingExample(): JSX.Element {
+export function ABTestingExample() {
   return (
     <FlagsProvider environmentToken={process.env.ZENMANAGE_ENVIRONMENT_TOKEN || 'cli_placeholder'}>
       <CheckoutExperience />

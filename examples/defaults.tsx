@@ -7,7 +7,7 @@ const defaults = DefaultsCollection.fromObject({
   'cart-item-limit': 20,
 });
 
-function DefaultsPanel(): JSX.Element {
+function DefaultsPanel() {
   const { value: homepageEnabled } = useFlag('new-homepage', false);
   const { value: cartLimit } = useFlag('cart-item-limit', 10);
 
@@ -19,7 +19,7 @@ function DefaultsPanel(): JSX.Element {
   );
 }
 
-export function DefaultsExample(): JSX.Element {
+export function DefaultsExample() {
   return (
     <FlagsProvider
       environmentToken={process.env.ZENMANAGE_ENVIRONMENT_TOKEN || 'cli_placeholder'}
