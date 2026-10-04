@@ -1,7 +1,40 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { ConfigBuilder, Zenmanage } from '@zenmanage/sdk';
+import type { Context, DefaultsCollection } from '@zenmanage/sdk';
+import { version as PACKAGE_VERSION } from '../package.json';
 import { FlagsContext } from './context';
 import type { FlagsProviderProps } from './types';
+
+/** The client agent the API registers this package under (see the api's EnsureClientAgentIsValid). */
+const CLIENT_AGENT = 'zenmanage-react';
+
+interface ProviderState {
+  isLoading: boolean;
+  isReady: boolean;
+  error: Error | null;
+  revision: number;
+}
+
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
+}
+
+function describeContext(context: Context | undefined): string {
+  return context === undefined ? '' : JSON.stringify(context);
+}
+
+function describeDefaults(defaults: DefaultsCollection | undefined): string {
+  if (defaults === undefined) {
+    return '';
+  }
+
+  return JSON.stringify(
+    defaults
+      .keys()
+      .sort()
+      .map((key) => [key, defaults.get(key)])
+  );
+}
 
 export function FlagsProvider({
   client,
@@ -14,16 +47,20 @@ export function FlagsProvider({
   preload = true,
   onError,
   children,
-}: FlagsProviderProps): JSX.Element {
-  const [state, setState] = useState<{
-    isLoading: boolean;
-    isReady: boolean;
-    error: Error | null;
-  }>({
-    isLoading: false,
-    isReady: false,
+}: FlagsProviderProps): ReactElement {
+  const [state, setState] = useState<ProviderState>(() => ({
+    isLoading: preload,
+    isReady: !preload,
     error: null,
-  });
+    revision: 0,
+  }));
+
+  // Callers routinely pass `onError` inline, which is a new function every render. Reading it
+  // through a ref keeps it out of the dependencies below so it can't restart the preload.
+  const onErrorRef = useRef(onError);
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   const resolvedClient = useMemo(() => {
     if (client) {
@@ -34,7 +71,10 @@ export function FlagsProvider({
       throw new Error('FlagsProvider requires either a client or an environmentToken.');
     }
 
-    const builder = ConfigBuilder.create().withEnvironmentToken(environmentToken);
+    const builder = ConfigBuilder.create()
+      .withEnvironmentToken(environmentToken)
+      .withClientAgent(CLIENT_AGENT)
+      .withSdkVersion(PACKAGE_VERSION);
 
     if (apiEndpoint) {
       builder.withApiEndpoint(apiEndpoint);
@@ -51,55 +91,83 @@ export function FlagsProvider({
     return new Zenmanage(builder.build());
   }, [client, environmentToken, apiEndpoint, cacheTtl, enableUsageReporting]);
 
+  // `context` and `defaults` are often built inline (`context={Context.single('user', id)}`),
+  // so compare them by content: a new-but-equal object must not replace the flag manager,
+  // which would put every mounted hook back into its loading state on each parent render.
+  const contextSignature = describeContext(context);
+  const defaultsSignature = describeDefaults(defaults);
+  /* eslint-disable react-hooks/exhaustive-deps */
+  const stableContext = useMemo(() => context, [contextSignature]);
+  const stableDefaults = useMemo(() => defaults, [defaultsSignature]);
+  /* eslint-enable react-hooks/exhaustive-deps */
+
   const manager = useMemo(() => {
     let result = resolvedClient.flags();
 
-    if (context) {
-      result = result.withContext(context);
+    if (stableContext) {
+      result = result.withContext(stableContext);
     }
 
-    if (defaults) {
-      result = result.withDefaults(defaults);
+    if (stableDefaults) {
+      result = result.withDefaults(stableDefaults);
     }
 
     return result;
-  }, [resolvedClient, context, defaults]);
+  }, [resolvedClient, stableContext, stableDefaults]);
 
+  // A background refresh deliberately doesn't set `isLoading`: hooks keep serving their last
+  // value while rules re-fetch, so gated UI doesn't unmount and remount on every refresh.
   const refresh = useCallback(async () => {
-    setState((current) => ({ ...current, isLoading: true, error: null }));
-
     try {
       await manager.refreshRules();
-      setState({ isLoading: false, isReady: true, error: null });
+      setState((current) => ({
+        ...current,
+        isReady: true,
+        error: null,
+        revision: current.revision + 1,
+      }));
     } catch (error) {
-      const resolvedError = error as Error;
-      onError?.(resolvedError);
-      setState({ isLoading: false, isReady: false, error: resolvedError });
+      const resolvedError = toError(error);
+      onErrorRef.current?.(resolvedError);
+      setState((current) => ({ ...current, error: resolvedError }));
       throw resolvedError;
     }
-  }, [manager, onError]);
+  }, [manager]);
 
   useEffect(() => {
     let isDisposed = false;
 
     async function prime(): Promise<void> {
       if (!preload) {
-        setState({ isLoading: false, isReady: true, error: null });
+        setState((current) =>
+          current.isReady && !current.isLoading && current.error === null
+            ? current
+            : { ...current, isLoading: false, isReady: true, error: null }
+        );
         return;
       }
 
-      setState({ isLoading: true, isReady: false, error: null });
+      setState((current) =>
+        current.isLoading && !current.isReady && current.error === null
+          ? current
+          : { ...current, isLoading: true, isReady: false, error: null }
+      );
 
       try {
         await manager.all();
         if (!isDisposed) {
-          setState({ isLoading: false, isReady: true, error: null });
+          setState((current) => ({ ...current, isLoading: false, isReady: true, error: null }));
         }
       } catch (error) {
-        const resolvedError = error as Error;
-        onError?.(resolvedError);
         if (!isDisposed) {
-          setState({ isLoading: false, isReady: false, error: resolvedError });
+          const resolvedError = toError(error);
+          onErrorRef.current?.(resolvedError);
+          setState((current) => ({
+            ...current,
+            isLoading: false,
+            isReady: false,
+            error: resolvedError,
+          }));
         }
       }
     }
@@ -109,20 +177,21 @@ export function FlagsProvider({
     return () => {
       isDisposed = true;
     };
-  }, [manager, onError, preload]);
+  }, [manager, preload]);
 
   const value = useMemo(
     () => ({
       client: resolvedClient,
       manager,
-      context,
-      defaults,
+      context: stableContext,
+      defaults: stableDefaults,
       isReady: state.isReady,
       isLoading: state.isLoading,
       error: state.error,
+      revision: state.revision,
       refresh,
     }),
-    [resolvedClient, manager, context, defaults, state, refresh]
+    [resolvedClient, manager, stableContext, stableDefaults, state, refresh]
   );
 
   return <FlagsContext.Provider value={value}>{children}</FlagsContext.Provider>;

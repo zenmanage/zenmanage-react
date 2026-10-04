@@ -3,13 +3,13 @@ import { FlagsProvider, useFlag } from '@zenmanage/react';
 
 const userContext = Context.single('user', 'user-987');
 
-function RolloutPanel(): JSX.Element {
+function RolloutPanel() {
   const { value } = useFlag('new-checkout-rollout', false);
 
   return value ? <p>User is in rollout bucket</p> : <p>User is in control bucket</p>;
 }
 
-export function PercentageRolloutsExample(): JSX.Element {
+export function PercentageRolloutsExample() {
   return (
     <FlagsProvider
       environmentToken={process.env.ZENMANAGE_ENVIRONMENT_TOKEN || 'cli_placeholder'}

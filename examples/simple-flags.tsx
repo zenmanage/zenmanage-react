@@ -1,6 +1,6 @@
 import { FlagsProvider, useFlag } from '@zenmanage/react';
 
-function SimpleFlagsPanel(): JSX.Element {
+function SimpleFlagsPanel() {
   const { value: newNavEnabled, isLoading } = useFlag('new-navigation', false);
 
   if (isLoading) {
@@ -10,7 +10,7 @@ function SimpleFlagsPanel(): JSX.Element {
   return <p>{newNavEnabled ? 'New navigation enabled' : 'Using classic navigation'}</p>;
 }
 
-export function SimpleFlagsExample(): JSX.Element {
+export function SimpleFlagsExample() {
   return (
     <FlagsProvider environmentToken={process.env.ZENMANAGE_ENVIRONMENT_TOKEN || 'cli_placeholder'}>
       <SimpleFlagsPanel />

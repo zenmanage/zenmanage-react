@@ -1,9 +1,10 @@
+import type { ReactElement } from 'react';
 import { render, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { FlagsProvider } from '../src/FlagsProvider';
 import { useFlagsContext } from '../src/context';
 
-function RuntimeProbe(): JSX.Element {
+function RuntimeProbe(): ReactElement {
   const state = useFlagsContext();
 
   return (

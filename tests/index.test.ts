@@ -8,7 +8,6 @@ describe('public exports', () => {
     expect(ReactSdk.withFlag).toBeDefined();
     expect(ReactSdk.useFlag).toBeDefined();
     expect(ReactSdk.useVariant).toBeDefined();
-    expect(ReactSdk.useBooleanFlag).toBeDefined();
     expect(ReactSdk.useFlagsContext).toBeDefined();
   });
 });

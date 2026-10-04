@@ -1,11 +1,12 @@
+import type { ReactElement } from 'react';
 import { act, render, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { Context, DefaultsCollection } from '@zenmanage/sdk';
 import { FlagsProvider } from '../src/FlagsProvider';
 import { useFlagsContext } from '../src/context';
-import { createMockClient, createMockManager } from './test-utils';
+import { createDeferred, createMockClient, createMockManager } from './test-utils';
 
-function ContextProbe(): JSX.Element {
+function ContextProbe(): ReactElement {
   const state = useFlagsContext();
 
   return (
@@ -56,9 +57,7 @@ describe('FlagsProvider', () => {
 
   it('invokes onError when preload fails', async () => {
     const manager = createMockManager();
-    manager.all = vi.fn(async () => {
-      throw new Error('network issue');
-    });
+    manager.all.mockRejectedValue(new Error('network issue'));
     const client = createMockClient(manager);
     const onError = vi.fn();
 
@@ -74,15 +73,13 @@ describe('FlagsProvider', () => {
 
   it('surfaces refresh errors and invokes onError', async () => {
     const manager = createMockManager({});
-    manager.refreshRules = vi.fn(async () => {
-      throw new Error('refresh failed');
-    });
+    manager.refreshRules.mockRejectedValue(new Error('refresh failed'));
     const client = createMockClient(manager);
     const onError = vi.fn();
 
     let refreshFn: (() => Promise<void>) | null = null;
 
-    function RefreshProbe(): JSX.Element {
+    function RefreshProbe(): ReactElement {
       const state = useFlagsContext();
       refreshFn = state.refresh;
       return <div data-testid="error-state">{String(Boolean(state.error))}</div>;
@@ -102,5 +99,174 @@ describe('FlagsProvider', () => {
 
     await waitFor(() => expect(getByTestId('error-state').textContent).toBe('true'));
     expect(onError).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('FlagsProvider stability across parent re-renders', () => {
+  function Harness({
+    client,
+    makeContext,
+    makeDefaults,
+    onError,
+  }: {
+    client: ReturnType<typeof createMockClient>;
+    makeContext?: () => Context;
+    makeDefaults?: () => DefaultsCollection;
+    onError?: (error: Error) => void;
+  }): ReactElement {
+    return (
+      <FlagsProvider
+        client={client as never}
+        context={makeContext?.()}
+        defaults={makeDefaults?.()}
+        onError={onError}
+      >
+        <ContextProbe />
+      </FlagsProvider>
+    );
+  }
+
+  it('does not re-prime when the parent passes a new inline onError each render', async () => {
+    const manager = createMockManager({ 'new-ui': true });
+    const client = createMockClient(manager);
+
+    const { getByTestId, rerender } = render(<Harness client={client} onError={() => undefined} />);
+    await waitFor(() => expect(getByTestId('ready').textContent).toBe('true'));
+
+    rerender(<Harness client={client} onError={() => undefined} />);
+    rerender(<Harness client={client} onError={() => undefined} />);
+
+    expect(manager.all).toHaveBeenCalledTimes(1);
+    expect(getByTestId('loading').textContent).toBe('false');
+    expect(getByTestId('ready').textContent).toBe('true');
+  });
+
+  it('calls the latest onError, not the one from the first render', async () => {
+    const manager = createMockManager();
+    manager.all.mockRejectedValue(new Error('network issue'));
+    const client = createMockClient(manager);
+    const first = vi.fn();
+    const second = vi.fn();
+
+    const { getByTestId, rerender } = render(<Harness client={client} onError={first} />);
+    rerender(<Harness client={client} onError={second} />);
+
+    await waitFor(() => expect(getByTestId('has-error').textContent).toBe('true'));
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps one flag manager when an equivalent inline context is passed each render', async () => {
+    const manager = createMockManager({});
+    const client = createMockClient(manager);
+    const makeContext = (): Context => Context.single('user', '123');
+
+    const { getByTestId, rerender } = render(<Harness client={client} makeContext={makeContext} />);
+    await waitFor(() => expect(getByTestId('ready').textContent).toBe('true'));
+
+    rerender(<Harness client={client} makeContext={makeContext} />);
+    rerender(<Harness client={client} makeContext={makeContext} />);
+
+    expect(manager.withContext).toHaveBeenCalledTimes(1);
+    expect(manager.all).toHaveBeenCalledTimes(1);
+    expect(getByTestId('loading').textContent).toBe('false');
+  });
+
+  it('builds a new flag manager when the context actually changes', async () => {
+    const manager = createMockManager({});
+    const client = createMockClient(manager);
+
+    const { getByTestId, rerender } = render(
+      <Harness client={client} makeContext={() => Context.single('user', 'alice')} />
+    );
+    await waitFor(() => expect(getByTestId('ready').textContent).toBe('true'));
+
+    rerender(<Harness client={client} makeContext={() => Context.single('user', 'bob')} />);
+
+    await waitFor(() => expect(manager.withContext).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(getByTestId('ready').textContent).toBe('true'));
+    expect(manager.withContext.mock.calls[1][0].getIdentifier()).toBe('bob');
+  });
+
+  it('keeps one flag manager when equivalent inline defaults are passed each render', async () => {
+    const manager = createMockManager({});
+    const client = createMockClient(manager);
+    const makeDefaults = (): DefaultsCollection =>
+      DefaultsCollection.fromObject({ 'flag-a': true, 'flag-b': { limit: 1 } });
+
+    const { getByTestId, rerender } = render(
+      <Harness client={client} makeDefaults={makeDefaults} />
+    );
+    await waitFor(() => expect(getByTestId('ready').textContent).toBe('true'));
+
+    rerender(<Harness client={client} makeDefaults={makeDefaults} />);
+
+    expect(manager.withDefaults).toHaveBeenCalledTimes(1);
+    expect(manager.all).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('FlagsProvider initial state', () => {
+  function StateRecorder({ seen }: { seen: string[] }): ReactElement {
+    const { isLoading, isReady } = useFlagsContext();
+    seen.push(`loading=${isLoading},ready=${isReady}`);
+    return <div />;
+  }
+
+  it('reports loading from the very first render when preloading', async () => {
+    const manager = createMockManager({});
+    const seen: string[] = [];
+
+    render(
+      <FlagsProvider client={createMockClient(manager) as never} preload>
+        <StateRecorder seen={seen} />
+      </FlagsProvider>
+    );
+
+    expect(seen[0]).toBe('loading=true,ready=false');
+    await waitFor(() => expect(seen.at(-1)).toBe('loading=false,ready=true'));
+  });
+
+  it('reports ready from the very first render when not preloading', () => {
+    const manager = createMockManager({});
+    const seen: string[] = [];
+
+    render(
+      <FlagsProvider client={createMockClient(manager) as never} preload={false}>
+        <StateRecorder seen={seen} />
+      </FlagsProvider>
+    );
+
+    expect(seen).toEqual(['loading=false,ready=true']);
+  });
+
+  it('keeps hooks out of the loading state while a background refresh runs', async () => {
+    const manager = createMockManager({});
+    const refresh = createDeferred<undefined>();
+    manager.refreshRules.mockReturnValue(refresh.promise);
+    let refreshFn: (() => Promise<void>) | null = null;
+
+    function RefreshProbe(): ReactElement {
+      const state = useFlagsContext();
+      refreshFn = state.refresh;
+      return <div data-testid="loading">{String(state.isLoading)}</div>;
+    }
+
+    const { getByTestId } = render(
+      <FlagsProvider client={createMockClient(manager) as never} preload={false}>
+        <RefreshProbe />
+      </FlagsProvider>
+    );
+
+    let refreshing!: Promise<void>;
+    act(() => {
+      refreshing = refreshFn!();
+    });
+
+    expect(getByTestId('loading').textContent).toBe('false');
+    await act(async () => {
+      refresh.resolve(undefined);
+      await refreshing;
+    });
   });
 });

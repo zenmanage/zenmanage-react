@@ -1,39 +1,64 @@
 import type { PropsWithChildren } from 'react';
 import React from 'react';
+import type { Mock } from 'vitest';
+import type { FlagValue } from '@zenmanage/sdk';
 import { FlagsProvider } from '../src/FlagsProvider';
-
-type FlagPrimitive = boolean | string | number;
+import type { FlagsProviderProps } from '../src/types';
 
 export interface MockFlag {
   asBool: () => boolean;
   asString: () => string;
   asNumber: () => number;
-  getValue: () => FlagPrimitive;
+  asJson: () => unknown;
+  getValue: () => FlagValue;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyMock = Mock<any[], any>;
+
 export interface MockManager {
-  withContext: ReturnType<typeof vi.fn>;
-  withDefaults: ReturnType<typeof vi.fn>;
-  single: ReturnType<typeof vi.fn>;
-  all: ReturnType<typeof vi.fn>;
-  refreshRules: ReturnType<typeof vi.fn>;
+  withContext: AnyMock;
+  withDefaults: AnyMock;
+  single: AnyMock;
+  all: AnyMock;
+  refreshRules: AnyMock;
 }
 
 export interface MockClient {
-  flags: ReturnType<typeof vi.fn>;
+  flags: AnyMock;
 }
 
-export function createMockFlag(value: FlagPrimitive): MockFlag {
+export interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason: unknown) => void;
+}
+
+export function createDeferred<T>(): Deferred<T> {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+}
+
+export function createMockFlag(value: FlagValue): MockFlag {
+  const isJson = typeof value === 'object' && value !== null;
+
   return {
-    asBool: () => Boolean(value),
-    asString: () => String(value),
-    asNumber: () => Number(value),
+    asBool: () => (isJson ? true : Boolean(value)),
+    asString: () => (isJson ? '' : String(value)),
+    asNumber: () => (isJson ? 0 : Number(value)),
+    asJson: () => (isJson ? value : {}),
     getValue: () => value,
   };
 }
 
-export function createMockManager(seed: Record<string, FlagPrimitive> = {}): MockManager {
-  const single = vi.fn(async (key: string, defaultValue?: FlagPrimitive) => {
+export function createMockManager(seed: Record<string, FlagValue> = {}): MockManager {
+  const single = vi.fn(async (key: string, defaultValue?: FlagValue) => {
     if (Object.prototype.hasOwnProperty.call(seed, key)) {
       return createMockFlag(seed[key]);
     }
@@ -65,10 +90,15 @@ export function createMockClient(manager: MockManager): MockClient {
   };
 }
 
-export function createWrapper(client: MockClient, preload = false): React.FC<PropsWithChildren> {
+export function createWrapper(
+  client: MockClient,
+  preloadOrProps: boolean | Omit<FlagsProviderProps, 'client' | 'children'> = false
+): React.FC<PropsWithChildren> {
+  const props = typeof preloadOrProps === 'boolean' ? { preload: preloadOrProps } : preloadOrProps;
+
   return function Wrapper({ children }: PropsWithChildren) {
     return (
-      <FlagsProvider client={client as never} preload={preload}>
+      <FlagsProvider client={client as never} {...props}>
         {children}
       </FlagsProvider>
     );
