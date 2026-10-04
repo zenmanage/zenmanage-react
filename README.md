@@ -2,6 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/@zenmanage%2Freact.svg)](https://www.npmjs.com/package/@zenmanage/react)
 [![Build Status](https://github.com/zenmanage/zenmanage-react/actions/workflows/ci.yml/badge.svg)](https://github.com/zenmanage/zenmanage-react)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/58208d5047794cc5b1ad269eedc59567)](https://app.codacy.com/gh/zenmanage/zenmanage-react/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
 React hooks and components for Zenmanage feature flags.
