@@ -1,0 +1,31 @@
+# Keeps the npm dependencies and the GitHub Actions used by the workflows up to date.
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+
+  # The smoke app runs the built package on React 18, the oldest version this package
+  # supports. It still gets every other update, security fixes included. Only major React
+  # bumps are ignored, since Dependabot would otherwise keep proposing React 19 here.
+  - package-ecosystem: 'npm'
+    directory: '/examples/smoke-app'
+    schedule:
+      interval: 'weekly'
+    ignore:
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react-dom'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
