@@ -76,7 +76,7 @@
     "@types/react-dom": "^19.2.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
-    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.2.1",
@@ -85,9 +85,9 @@
     "prettier": "^3.3.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tsup": "^8.2.4",
+    "tsup": "^9.0.0",
     "typescript": "^5.6.2",
-    "vitest": "^1.6.0"
+    "vitest": "^5.0.5"
   },
   "engines": {
     "node": ">=18.0.0"
