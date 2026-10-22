@@ -14,7 +14,7 @@ export interface MockFlag {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyMock = Mock<any[], any>;
+type AnyMock = Mock<(...args: any[]) => any>;
 
 export interface MockManager {
   withContext: AnyMock;
