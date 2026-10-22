@@ -19,6 +19,10 @@ updates:
       # still runs on Node 18. Same reason as vitest above.
       - dependency-name: 'jsdom'
         versions: ['>=27.0.0']
+      # ESLint 10 needs Node 20.19+, so ESLint 9 (flat config, Node 18.18+) is the newest line
+      # that runs on the Node 18 job. Stay on it until Node 18 is dropped from the test matrix.
+      - dependency-name: 'eslint'
+        versions: ['>=10.0.0']
 
   # The smoke app runs the built package on React 18, the oldest version this package
   # supports. It still gets every other update, security fixes included. Only major React
