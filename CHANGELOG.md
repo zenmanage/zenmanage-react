@@ -1,5 +1,9 @@
 # @zenmanage/react
 
+## 1.0.1
+
+Maintenance release. Dependency, lint, and tooling updates, plus README badges. No changes to the public API or runtime behavior.
+
 ## 1.0.0
 
 First public release. The API below is the 1.0 surface, and semantic versioning applies from here. The Changed, Removed, and Fixed entries are relative to the internal 0.1.0 snapshot.
