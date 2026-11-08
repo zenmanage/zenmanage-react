@@ -1,5 +1,9 @@
 # @zenmanage/react
 
+## 1.0.2
+
+Maintenance release. Dev dependency updates (typescript-eslint). No changes to the public API or runtime behavior.
+
 ## 1.0.1
 
 Maintenance release. Dependency, lint, and tooling updates, plus README badges. No changes to the public API or runtime behavior.
