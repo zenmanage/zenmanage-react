@@ -1,5 +1,9 @@
 # @zenmanage/react
 
+## 1.1.0
+
+Maintenance release. Dev dependency updates: `@types/node` 20 to 26 (a major version of a development dependency), `typescript-eslint` and `prettier`. No changes to the public API or runtime behavior.
+
 ## 1.0.2
 
 Maintenance release. Dev dependency updates (typescript-eslint). No changes to the public API or runtime behavior.
