@@ -224,7 +224,7 @@ describe('FlagsProvider initial state', () => {
     );
 
     expect(seen[0]).toBe('loading=true,ready=false');
-    await waitFor(() => expect(seen.at(-1)).toBe('loading=false,ready=true'));
+    await waitFor(() => expect(seen[seen.length - 1]).toBe('loading=false,ready=true'));
   });
 
   it('reports ready from the very first render when not preloading', () => {
