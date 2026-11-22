@@ -32,6 +32,11 @@ updates:
     schedule:
       interval: 'weekly'
     ignore:
+      # The smoke app runs on the same Node 18 and 20 jobs, so vitest 4+ (Node 20+/22+) can't run there either.
+      - dependency-name: 'vitest'
+        versions: ['>=4.0.0']
+      - dependency-name: '@vitest/*'
+        versions: ['>=4.0.0']
       - dependency-name: 'react'
         update-types: ['version-update:semver-major']
       - dependency-name: 'react-dom'
