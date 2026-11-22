@@ -1,6 +1,6 @@
 {
   "name": "@zenmanage/react",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "React hooks and components for Zenmanage feature flags",
   "keywords": [
     "react",
