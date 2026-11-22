@@ -1,5 +1,11 @@
 # @zenmanage/react
 
+## 1.1.1
+
+### Patch Changes
+
+- 5b70e9b: Build and type-check with TypeScript 7. No changes to the public API or runtime behavior. The generated type declarations now list type-only exports in one `export type { ... }` block instead of inline `type` modifiers; the types themselves are the same.
+
 ## 1.1.0
 
 Maintenance release. Dev dependency updates: `@types/node` 20 to 26 (a major version of a development dependency), `typescript-eslint`, `prettier` and the smoke app's `vitest`. No changes to the public API or runtime behavior.
